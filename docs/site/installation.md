@@ -31,34 +31,40 @@ mariadb> exit
 
 ## Installing prerequisites
 
-Now that you are done, you can start installing the site. First, create a virtual environment and activate it. Here, we'll create a virtual environment named `vnojsite`.
+Now that you are done, you can start installing the site. First, create a virtual environment and activate it. Here, we'll create a virtual environment named `chtojsite`.
 
 ```shell-session
-$ python3 -m venv chtojsite
-$ . chtojsite/bin/activate
+$ python3 -m venv chtoj
+$ . chtoj/bin/activate
 ```
 
 You should see `(chtojsite)` prepended to your shell. Henceforth, `(chtojsite)` commands assume you are in the code directory, with the virtual environment active.
 
-?> The virtual environment will help keep the modules needed separate from the system package manager, and save you many headaches when updating. Read more about virtual environments [here](https://docs.python.org/3/tutorial/venv.html).
+ ?> The virtual environment will help keep the modules needed separate from the system package manager, and save you many headaches when updating. Read more about virtual environments [here](https://docs.python.org/3/tutorial/venv.html).
 
 Now, fetch the site source code:
 
+**NOTE**  
+Before cloning, you should **fork** the repository [CHT-OJ/oj](https://github.com/CHT-OJ/oj) to your own GitHub account.  
+
+Then clone **your forked repository** instead of the original one:
+
 ```shell-session
-(vnojsite) $ git clone --recursive https://github.com/CHT-OJ/oj.git site
-(vnojsite) $ cd site
+(chtojsite) $ git clone --recursive https://github.com/<your-username>/oj site
+(chtojsite) $ cd site
 ```
+
 
 Install Python dependencies into the virtual environment.
 
 ```shell-session
-(vnojsite) $ pip3 install -r requirements.txt
+(chtojsite) $ pip3 install -r requirements.txt
 ```
 
 Install Node.js packages:
 
 ```shell-session
-(vnojsite) $ npm install
+(chtojsite) $ npm install
 ```
 
 You will now need to configure `dmoj/local_settings.py`. You should make a copy of [this sample settings file](https://github.com/VNOI-Admin/vnoj-docs/blob/master/sample_files/local_settings.py) and read through it, making changes as necessary. Most importantly, you will want to update MariaDB credentials.
@@ -71,20 +77,27 @@ Generally, it's recommended that you add your settings in `dmoj/local_settings.p
 VNOJ uses `sass` and `autoprefixer` to generate the site stylesheets. VNOJ comes with a `make_style.sh` script that may be run to compile and optimize the stylesheets.
 
 ```shell-session
-(vnojsite) $ ./make_style.sh
+(chtojsite) $ ./make_style.sh
 ```
 
 Now, collect static files into `STATIC_ROOT` as specified in `dmoj/local_settings.py`.
 
 ```shell-session
-(vnojsite) $ ./manage.py collectstatic
+(chtojsite) $ ./manage.py collectstatic
+```
+
+**NOTE**  
+In case you get an error like **"No module named 'pkg_resources'"**, install this package:
+
+```shell-session
+pip install setuptools wheel
 ```
 
 You will also need to generate internationalization files.
 
 ```shell-session
-(vnojsite) $ ./manage.py compilemessages
-(vnojsite) $ ./manage.py compilejsi18n
+(chtojsite) $ ./manage.py compilemessages
+(chtojsite) $ ./manage.py compilejsi18n
 ```
 
 ## Setting up Celery
@@ -103,18 +116,26 @@ We will test that Celery works soon.
 
 ## Setting up database tables
 
+
+Now first we must create some folder n file 
+```shell-session
+(chtojsite) mkdir -p judge/migrations
+(chtojsite) touch touch judge/migrations/__init__.py
+```
+
 We must generate the schema for the database, since it is currently empty.
 
 ```shell-session
-(vnojsite) $ ./manage.py migrate
+(chtojsite) $ ./manage.py makemigrations judge
+(chtojsite) $ ./manage.py migrate
 ```
 
 Next, load some initial data so that your install is not entirely blank.
 
 ```shell-session
-(vnojsite) $ ./manage.py loaddata navbar
-(vnojsite) $ ./manage.py loaddata language_small
-(vnojsite) $ ./manage.py loaddata demo
+(chtojsite) $ ./manage.py loaddata navbar
+(chtojsite) $ ./manage.py loaddata language_small
+(chtojsite) $ ./manage.py loaddata demo
 ```
 
 !> Keep in mind that the `demo` fixture creates a superuser account with a username and password of `admin`. If your
@@ -123,7 +144,7 @@ site is exposed to others, you should change the user's password or remove the u
 You should create an admin account with which to log in initially.
 
 ```shell-session
-(vnojsite) $ ./manage.py createsuperuser
+(chtojsite) $ ./manage.py createsuperuser
 ```
 
 ## Running the server
@@ -131,13 +152,13 @@ You should create an admin account with which to log in initially.
 Now, you should verify that everything is going according to plan.
 
 ```shell-session
-(vnojsite) $ ./manage.py check
+(chtojsite) $ ./manage.py check
 ```
 
 At this point, you should attempt to run the server, and see if it all works.
 
 ```shell-session
-(vnojsite) $ ./manage.py runserver 0.0.0.0:8000
+(chtojsite) $ ./manage.py runserver 0.0.0.0:8000
 ```
 
 You should Ctrl-C to exit after verifying.
@@ -148,7 +169,7 @@ We will set up a proper webserver using nginx and uWSGI soon.
 You should also test to see if `bridged` runs.
 
 ```shell-session
-(vnojsite) $ ./manage.py runbridged
+(chtojsite) $ ./manage.py runbridged
 ```
 
 If there are no errors after about 10 seconds, it probably works.
@@ -157,7 +178,7 @@ You should Ctrl-C to exit.
 Next, test that the Celery workers run.
 
 ```shell-session
-(vnojsite) $ celery -A dmoj_celery worker
+(chtojsite) $ celery -A dmoj_celery worker
 ```
 
 You can Ctrl-C to exit.
@@ -173,13 +194,13 @@ First, copy our `uwsgi.ini` ([link](https://github.com/VNOI-Admin/vnoj-docs/blob
 You need to install `uwsgi`.
 
 ```shell-session
-(vnojsite) $ pip3 install uwsgi
+(chtojsite) $ pip3 install uwsgi
 ```
 
 To test, run:
 
 ```shell-session
-(vnojsite) $ uwsgi --ini uwsgi.ini
+(chtojsite) $ uwsgi --ini uwsgi.ini
 ```
 
 If it says workers are spawned, it probably works.
@@ -265,7 +286,7 @@ You need to uncomment the relevant section in the `nginx` configuration.
 Need to install the dependencies.
 
 ```shell-session
-(vnojsite) $ pip3 install websocket-client
+(chtojsite) $ pip3 install websocket-client
 ```
 
 Now copy `wsevent.conf` ([link](https://github.com/VNOI-Admin/vnoj-docs/blob/master/sample_files/wsevent.conf)) to `/etc/supervisor/conf.d/wsevent.conf`, changing paths, and then update supervisor and nginx.
